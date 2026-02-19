@@ -1,758 +1,582 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="File Converter">
-    <title>File Converter</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            min-height: 100vh;
-            background-color: #0d1117;
-            background-image: radial-gradient(ellipse at top, #161b22 0%, #0d1117 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            color: #e6edf3;
-        }
-
-        .bg-dots {
-            position: fixed;
-            inset: 0;
-            background-image: radial-gradient(#30363d 1px, transparent 1px);
-            background-size: 30px 30px;
-            opacity: 0.4;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .card {
-            position: relative;
-            z-index: 1;
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 16px;
-            padding: 36px;
-            width: 100%;
-            max-width: 480px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 28px;
-        }
-
-        .header .logo {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, #238636, #2ea043);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            margin: 0 auto 14px;
-            box-shadow: 0 0 20px rgba(46, 160, 67, 0.3);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                box-shadow: 0 0 20px rgba(46, 160, 67, 0.3);
-            }
-
-            50% {
-                box-shadow: 0 0 35px rgba(46, 160, 67, 0.6);
-            }
-        }
-
-        .header h1 {
-            font-size: 22px;
-            font-weight: 700;
-            color: #e6edf3;
-        }
-
-        .header p {
-            color: #8b949e;
-            font-size: 13px;
-            margin-top: 5px;
-        }
-
-        .dropzone {
-            border: 1.5px dashed #30363d;
-            border-radius: 12px;
-            padding: 32px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            background: #0d1117;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .dropzone::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(46, 160, 67, 0.05), rgba(88, 166, 255, 0.05));
-            opacity: 0;
-            transition: opacity 0.25s;
-        }
-
-        .dropzone:hover,
-        .dropzone.drag {
-            border-color: #2ea043;
-            transform: scale(1.01);
-        }
-
-        .dropzone:hover::before,
-        .dropzone.drag::before {
-            opacity: 1;
-        }
-
-        .dropzone .dz-icon {
-            font-size: 36px;
-            margin-bottom: 10px;
-            display: block;
-            transition: transform 0.3s;
-        }
-
-        .dropzone:hover .dz-icon {
-            transform: translateY(-4px);
-        }
-
-        .dropzone p {
-            color: #8b949e;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .dropzone span {
-            color: #58a6ff;
-            font-weight: 600;
-        }
-
-        .file-info {
-            display: none;
-            margin-top: 12px;
-            background: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 10px;
-            padding: 12px 16px;
-            align-items: center;
-            gap: 12px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .file-info.show {
-            display: flex;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-6px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .fi-icon {
-            font-size: 24px;
-        }
-
-        .fi-name {
-            font-weight: 600;
-            color: #58a6ff;
-            font-size: 13px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            max-width: 280px;
-        }
-
-        .fi-size {
-            color: #8b949e;
-            font-size: 11px;
-            margin-top: 2px;
-        }
-
-        .warn-msg {
-            display: none;
-            margin-top: 10px;
-            background: #1c1407;
-            color: #d29922;
-            border: 1px solid #5a3e0a;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 13px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .warn-msg.show {
-            display: block;
-        }
-
-        select {
-            width: 100%;
-            margin-top: 14px;
-            padding: 12px 16px;
-            border-radius: 10px;
-            border: 1px solid #30363d;
-            font-size: 14px;
-            color: #e6edf3;
-            background: #0d1117;
-            outline: none;
-            cursor: pointer;
-            transition: border 0.2s, box-shadow 0.2s;
-            font-family: inherit;
-        }
-
-        select:focus {
-            border-color: #388bfd;
-            box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.15);
-        }
-
-        option,
-        optgroup {
-            background: #161b22;
-            color: #e6edf3;
-        }
-
-        .progress-box {
-            display: none;
-            margin-top: 16px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .progress-box.show {
-            display: block;
-        }
-
-        .progress-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #8b949e;
-            margin-bottom: 8px;
-        }
-
-        .progress-track {
-            background: #21262d;
-            border-radius: 99px;
-            height: 6px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            border-radius: 99px;
-            background: linear-gradient(90deg, #238636, #2ea043);
-            transition: width 0.3s ease;
-            width: 0%;
-            position: relative;
-        }
-
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 20px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3));
-            animation: shimmer 1s infinite;
-        }
-
-        @keyframes shimmer {
-            0% {
-                opacity: 0;
-            }
-
-            50% {
-                opacity: 1;
-            }
-
-            100% {
-                opacity: 0;
-            }
-        }
-
-        .btn-convert {
-            width: 100%;
-            margin-top: 16px;
-            padding: 13px;
-            border: 1px solid rgba(240, 246, 252, 0.1);
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            color: white;
-            background: #238636;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-convert::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(rgba(255, 255, 255, 0.08), transparent);
-        }
-
-        .btn-convert:hover:not(:disabled) {
-            background: #2ea043;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(46, 160, 67, 0.4);
-        }
-
-        .btn-convert:active:not(:disabled) {
-            transform: scale(0.98);
-        }
-
-        .btn-convert:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .btn-download {
-            display: none;
-            width: 100%;
-            margin-top: 12px;
-            padding: 13px;
-            border-radius: 10px;
-            border: 1px solid rgba(240, 246, 252, 0.1);
-            font-size: 15px;
-            font-weight: 600;
-            color: white;
-            background: #1f6feb;
-            text-align: center;
-            text-decoration: none;
-            transition: all 0.2s;
-            animation: fadeIn 0.4s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-download::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(rgba(255, 255, 255, 0.08), transparent);
-        }
-
-        .btn-download.show {
-            display: block;
-        }
-
-        .btn-download:hover {
-            background: #388bfd;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(31, 111, 235, 0.4);
-        }
-
-        .error-msg {
-            display: none;
-            margin-top: 12px;
-            background: #1c0f0f;
-            color: #ff7b72;
-            border: 1px solid #6e1c1c;
-            border-radius: 10px;
-            padding: 12px 16px;
-            text-align: center;
-            font-size: 13px;
-            animation: shake 0.4s ease;
-        }
-
-        .error-msg.show {
-            display: block;
-        }
-
-        @keyframes shake {
-
-            0%,
-            100% {
-                transform: translateX(0);
-            }
-
-            20% {
-                transform: translateX(-6px);
-            }
-
-            60% {
-                transform: translateX(6px);
-            }
-        }
-
-        .badge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #484f58;
-        }
-
-        .badge::before,
-        .badge::after {
-            content: '';
-            height: 1px;
-            flex: 1;
-            background: #21262d;
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #0d1117;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #30363d;
-            border-radius: 3px;
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 12px;
-                align-items: flex-start;
-                padding-top: 24px;
-            }
-
-            .card {
-                padding: 24px 20px;
-                border-radius: 20px;
-            }
-
-            .header .logo {
-                width: 48px;
-                height: 48px;
-                font-size: 22px;
-            }
-
-            .header h1 {
-                font-size: 19px;
-            }
-
-            .header p {
-                font-size: 12px;
-            }
-
-            .dropzone {
-                padding: 24px 16px;
-            }
-
-            .dropzone .dz-icon {
-                font-size: 30px;
-            }
-
-            .dropzone p {
-                font-size: 13px;
-            }
-
-            .fi-name {
-                max-width: 200px;
-            }
-
-            select {
-                font-size: 16px;
-            }
-
-            .btn-convert,
-            .btn-download {
-                padding: 16px;
-                font-size: 16px;
-            }
-        }
-
-        * {
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            -webkit-overflow-scrolling: touch;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="File Converter">
+  <title>File Converter</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      background-color: #0d1117;
+      background-image: radial-gradient(ellipse at top, #161b22 0%, #0d1117 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #e6edf3;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .bg-dots {
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(#30363d 1px, transparent 1px);
+      background-size: 30px 30px;
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      padding: 36px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .header { text-align: center; margin-bottom: 28px; }
+    .header .logo {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #238636, #2ea043);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      margin: 0 auto 14px;
+      box-shadow: 0 0 20px rgba(46,160,67,0.3);
+      animation: pulse 2s infinite;
+      color: white;
+      font-weight: 700;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(46,160,67,0.3); }
+      50%       { box-shadow: 0 0 35px rgba(46,160,67,0.6); }
+    }
+
+    .header h1 { font-size: 22px; font-weight: 700; color: #e6edf3; }
+    .header p  { color: #8b949e; font-size: 13px; margin-top: 5px; }
+
+    .dropzone {
+      border: 1.5px dashed #30363d;
+      border-radius: 12px;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      background: #0d1117;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dropzone::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(46,160,67,0.05), rgba(88,166,255,0.05));
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .dropzone:hover, .dropzone.drag { border-color: #2ea043; transform: scale(1.01); }
+    .dropzone:hover::before, .dropzone.drag::before { opacity: 1; }
+
+    .dropzone .dz-icon {
+      font-size: 32px; margin-bottom: 10px; display: block;
+      transition: transform 0.3s; color: #58a6ff;
+    }
+
+    .dropzone:hover .dz-icon { transform: translateY(-4px); }
+    .dropzone p { color: #8b949e; font-size: 14px; line-height: 1.6; }
+    .dropzone span { color: #58a6ff; font-weight: 600; }
+
+    .file-info {
+      display: none;
+      margin-top: 12px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 12px 16px;
+      align-items: center;
+      gap: 12px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .file-info.show { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fi-badge {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #58a6ff;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .fi-name { font-weight: 600; color: #e6edf3; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+    .fi-size { color: #8b949e; font-size: 11px; margin-top: 2px; }
+
+    .warn-msg {
+      display: none;
+      margin-top: 10px;
+      background: #1c1407;
+      color: #d29922;
+      border: 1px solid #5a3e0a;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      animation: fadeIn 0.3s ease;
+    }
+    .warn-msg.show { display: block; }
+
+    .cloud-badge {
+      display: none;
+      margin-top: 10px;
+      background: #0d1f38;
+      color: #58a6ff;
+      border: 1px solid #1f4a7a;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+      animation: fadeIn 0.3s ease;
+    }
+    .cloud-badge.show { display: block; }
+
+    select {
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid #30363d;
+      font-size: 16px;
+      color: #e6edf3;
+      background: #0d1117;
+      outline: none;
+      cursor: pointer;
+      transition: border 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+    }
+
+    select:focus { border-color: #388bfd; box-shadow: 0 0 0 3px rgba(56,139,253,0.15); }
+    option, optgroup { background: #161b22; color: #e6edf3; }
+
+    .progress-box { display: none; margin-top: 16px; animation: fadeIn 0.3s ease; }
+    .progress-box.show { display: block; }
+
+    .progress-label {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: #8b949e; margin-bottom: 8px;
+    }
+
+    .progress-track { background: #21262d; border-radius: 99px; height: 6px; overflow: hidden; }
+
+    .progress-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, #238636, #2ea043);
+      transition: width 0.3s ease; width: 0%;
+      position: relative;
+    }
+
+    .progress-fill::after {
+      content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 20px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+      animation: shimmer 1s infinite;
+    }
+
+    @keyframes shimmer {
+      0%   { opacity: 0; }
+      50%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .btn-convert {
+      width: 100%; margin-top: 16px; padding: 14px;
+      border: 1px solid rgba(240,246,252,0.1); border-radius: 10px;
+      font-size: 15px; font-weight: 600; color: white;
+      background: #238636; cursor: pointer;
+      transition: all 0.2s; font-family: inherit;
+      position: relative; overflow: hidden;
+    }
+
+    .btn-convert::after { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(255,255,255,0.08), transparent); }
+    .btn-convert:hover:not(:disabled) { background: #2ea043; transform: translateY(-1px); box-shadow: 0 4px 15px rgba(46,160,67,0.4); }
+    .btn-convert:active:not(:disabled) { transform: scale(0.98); }
+    .btn-convert:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-download {
+      display: none; width: 100%; margin-top: 12px; padding: 14px;
+      border-radius: 10px; border: 1px solid rgba(240,246,252,0.1);
+      font-size: 15px; font-weight: 600; color: white;
+      background: #1f6feb; text-align: center; text-decoration: none;
+      transition: all 0.2s; animation: fadeIn 0.4s ease;
+      position: relative; overflow: hidden;
+    }
+
+    .btn-download::after { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(255,255,255,0.08), transparent); }
+    .btn-download.show { display: block; }
+    .btn-download:hover { background: #388bfd; transform: translateY(-1px); box-shadow: 0 4px 15px rgba(31,111,235,0.4); }
+
+    .error-msg {
+      display: none; margin-top: 12px;
+      background: #1c0f0f; color: #ff7b72;
+      border: 1px solid #6e1c1c; border-radius: 10px;
+      padding: 12px 16px; text-align: center; font-size: 13px;
+      animation: shake 0.4s ease;
+    }
+
+    .error-msg.show { display: block; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-6px); }
+      60%       { transform: translateX(6px); }
+    }
+
+    .badge {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; margin-top: 20px; font-size: 12px; color: #484f58;
+    }
+    .badge::before, .badge::after { content: ''; height: 1px; flex: 1; background: #21262d; }
+
+    @media (max-width: 480px) {
+      body { padding: 12px; align-items: flex-start; padding-top: 24px; }
+      .card { padding: 24px 20px; border-radius: 20px; }
+      .header .logo { width: 48px; height: 48px; font-size: 20px; }
+      .header h1 { font-size: 19px; }
+      .header p  { font-size: 12px; }
+      .dropzone { padding: 24px 16px; }
+      .fi-name { max-width: 180px; }
+      .btn-convert, .btn-download { padding: 16px; font-size: 16px; }
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0d1117; }
+    ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+  </style>
 </head>
-
 <body>
 
-    <div class="bg-dots"></div>
+<div class="bg-dots"></div>
 
-    <div class="card">
-        <div class="header">
-            <div class="logo">⇄</div>
-            <h1>File Converter</h1>
-            <p>Converti qualsiasi file direttamente sul dispositivo</p>
-        </div>
+<div class="card">
+  <div class="header">
+    <div class="logo">⇄</div>
+    <h1>File Converter</h1>
+    <p>Converti qualsiasi file direttamente sul dispositivo</p>
+  </div>
 
-        <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
-            <input type="file" id="fileInput" style="display:none">
-            <span class="dz-icon">↑</span>
-            <p>Trascina un file qui<br><span>o clicca per selezionarlo</span></p>
-        </div>
+  <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" style="display:none">
+    <span class="dz-icon">↑</span>
+    <p>Trascina un file qui<br><span>o clicca per selezionarlo</span></p>
+  </div>
 
-        <div class="file-info" id="fileInfo">
-            <span class="fi-icon" id="fiIcon">#</span>
-            <div>
-                <div class="fi-name" id="fileName"></div>
-                <div class="fi-size" id="fileSize"></div>
-            </div>
-        </div>
-
-        <div class="warn-msg" id="warnMsg"></div>
-
-        <select id="formatSelect">
-            <option value="">Seleziona formato output</option>
-        </select>
-
-        <div class="progress-box" id="progressBox">
-            <div class="progress-label">
-                <span id="statusText">Caricamento...</span>
-                <span id="progressText"></span>
-            </div>
-            <div class="progress-track">
-                <div class="progress-fill" id="progressBar"></div>
-            </div>
-        </div>
-
-        <button class="btn-convert" id="convertBtn" disabled>Converti</button>
-        <a class="btn-download" id="downloadLink">Scarica file</a>
-        <div class="error-msg" id="errorMsg">Errore durante la conversione. Controlla la console (F12).</div>
-
-        <div class="badge">100% locale — nessun file inviato a server</div>
+  <div class="file-info" id="fileInfo">
+    <span class="fi-badge" id="fiBadge">FILE</span>
+    <div>
+      <div class="fi-name" id="fileName"></div>
+      <div class="fi-size" id="fileSize"></div>
     </div>
+  </div>
 
-    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
-    <script>
-        const { createFFmpeg, fetchFile } = FFmpeg
+  <div class="warn-msg" id="warnMsg"></div>
+  <div class="cloud-badge" id="cloudBadge">Questa conversione viene elaborata via CloudConvert (max 25/giorno con piano free)</div>
 
-        const ffmpeg = createFFmpeg({
-            corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
-            log: true,
+  <select id="formatSelect">
+    <option value="">Seleziona formato output</option>
+  </select>
+
+  <div class="progress-box" id="progressBox">
+    <div class="progress-label">
+      <span id="statusText">Caricamento...</span>
+      <span id="progressText"></span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressBar"></div>
+    </div>
+  </div>
+
+  <button class="btn-convert" id="convertBtn" disabled>Converti</button>
+  <a class="btn-download" id="downloadLink">Scarica file</a>
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="badge">100% locale per media — CloudConvert per documenti/archivi</div>
+</div>
+
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+<script>
+  const { createFFmpeg, fetchFile } = FFmpeg
+
+  const CLOUDCONVERT_API_KEY = 'LA_TUA_API_KEY_QUI'
+
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+
+  const ffmpeg = createFFmpeg({
+    corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
+    log: true,
+  })
+
+  const CONVERSION_MAP = {
+    video:    { exts: ['mp4','webm','avi','mov','mkv','flv','wmv'],   outputs: ['mp4','webm','avi','mov','mkv','mp3','wav','gif'] },
+    audio:    { exts: ['mp3','wav','aac','ogg','flac','m4a','wma'],   outputs: ['mp3','wav','aac','ogg','flac'] },
+    image:    { exts: ['jpg','jpeg','png','webp','gif','bmp','tiff'],  outputs: ['jpg','png','webp','gif','bmp'] },
+    document: { exts: ['docx','doc','odt','rtf','txt','pptx','xlsx'], outputs: ['pdf','docx','txt','html','pptx','xlsx'] },
+    archive:  { exts: ['zip','rar','7z','tar','gz'],                  outputs: ['zip','rar','7z','tar','gz'] },
+  }
+
+  const CLOUD_CATEGORIES = ['document', 'archive']
+
+  let selectedFile = null
+  let fileCategory = null
+
+  const fileInput    = document.getElementById('fileInput')
+  const dropzone     = document.getElementById('dropzone')
+  const fileInfo     = document.getElementById('fileInfo')
+  const fiBadge      = document.getElementById('fiBadge')
+  const fileName     = document.getElementById('fileName')
+  const fileSize     = document.getElementById('fileSize')
+  const warnMsg      = document.getElementById('warnMsg')
+  const cloudBadge   = document.getElementById('cloudBadge')
+  const formatSelect = document.getElementById('formatSelect')
+  const convertBtn   = document.getElementById('convertBtn')
+  const progressBox  = document.getElementById('progressBox')
+  const progressBar  = document.getElementById('progressBar')
+  const progressText = document.getElementById('progressText')
+  const statusText   = document.getElementById('statusText')
+  const downloadLink = document.getElementById('downloadLink')
+  const errorMsg     = document.getElementById('errorMsg')
+
+  function detectCategory(ext) {
+    for (const [cat, data] of Object.entries(CONVERSION_MAP)) {
+      if (data.exts.includes(ext)) return cat
+    }
+    return null
+  }
+
+  function populateFormats(category) {
+    formatSelect.innerHTML = '<option value="">Seleziona formato output</option>'
+    if (!category) return
+    const outputs = CONVERSION_MAP[category].outputs
+    const group = document.createElement('optgroup')
+    group.label = category.charAt(0).toUpperCase() + category.slice(1)
+
+    const inputExt = selectedFile?.name.split('.').pop().toLowerCase()
+    outputs.forEach(fmt => {
+      if (fmt === inputExt) return
+      const opt = document.createElement('option')
+      opt.value = fmt
+      opt.textContent = fmt.toUpperCase()
+      group.appendChild(opt)
+    })
+    formatSelect.appendChild(group)
+  }
+
+  function setFile(file) {
+    selectedFile = file
+    const ext = file.name.split('.').pop().toLowerCase()
+    fileCategory = detectCategory(ext)
+
+    fileName.textContent = file.name
+    fileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB'
+    fiBadge.textContent = ext.toUpperCase()
+    fileInfo.classList.add('show')
+    downloadLink.classList.remove('show')
+    errorMsg.classList.remove('show')
+    errorMsg.textContent = ''
+    cloudBadge.classList.remove('show')
+
+    if (!fileCategory) {
+      warnMsg.textContent = 'Formato ".' + ext + '" non supportato.'
+      warnMsg.classList.add('show')
+      formatSelect.innerHTML = '<option value="">Formato non supportato</option>'
+      convertBtn.disabled = true
+      return
+    }
+
+    if (isIOS && !CLOUD_CATEGORIES.includes(fileCategory)) {
+      warnMsg.textContent = 'Su iOS le conversioni video/audio/immagine non sono supportate. Prova da desktop.'
+      warnMsg.classList.add('show')
+      formatSelect.innerHTML = '<option value="">Non disponibile su iOS</option>'
+      convertBtn.disabled = true
+      return
+    }
+
+    warnMsg.classList.remove('show')
+    populateFormats(fileCategory)
+
+    if (CLOUD_CATEGORIES.includes(fileCategory)) {
+      cloudBadge.classList.add('show')
+    }
+
+    checkReady()
+  }
+
+  function checkReady() {
+    convertBtn.disabled = !(selectedFile && formatSelect.value && fileCategory)
+  }
+
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) setFile(e.target.files[0]) })
+  formatSelect.addEventListener('change', () => { errorMsg.classList.remove('show'); checkReady() })
+
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag') })
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'))
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault()
+    dropzone.classList.remove('drag')
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0])
+  })
+
+  async function convertViaCloudConvert(file, outputFmt) {
+    const inputFmt = file.name.split('.').pop().toLowerCase()
+
+    statusText.textContent = 'Avvio job CloudConvert...'
+    progressBar.style.width = '15%'
+
+    const jobRes = await fetch('https://api.cloudconvert.com/v2/jobs', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CLOUDCONVERT_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        tasks: {
+          'upload-file': { operation: 'import/upload' },
+          'convert-file': {
+            operation: 'convert',
+            input: 'upload-file',
+            input_format: inputFmt,
+            output_format: outputFmt
+          },
+          'export-file': {
+            operation: 'export/url',
+            input: 'convert-file'
+          }
+        }
+      })
+    })
+
+    if (!jobRes.ok) throw new Error('Errore creazione job CloudConvert')
+    const job = await jobRes.json()
+    const uploadTask = job.data.tasks.find(t => t.name === 'upload-file')
+
+    statusText.textContent = 'Caricamento file...'
+    progressBar.style.width = '35%'
+
+    const formData = new FormData()
+    Object.entries(uploadTask.result.form.parameters).forEach(([k, v]) => formData.append(k, v))
+    formData.append('file', file)
+
+    await fetch(uploadTask.result.form.url, { method: 'POST', body: formData })
+
+    statusText.textContent = 'Conversione in corso...'
+    progressBar.style.width = '60%'
+
+    let exportTask = null
+    let attempts = 0
+    while (attempts < 30) {
+      await new Promise(r => setTimeout(r, 2000))
+      const statusRes = await fetch(`https://api.cloudconvert.com/v2/jobs/${job.data.id}`, {
+        headers: { 'Authorization': `Bearer ${CLOUDCONVERT_API_KEY}` }
+      })
+      const statusJob = await statusRes.json()
+      exportTask = statusJob.data.tasks.find(t => t.name === 'export-file')
+
+      if (exportTask?.status === 'finished') break
+      if (exportTask?.status === 'error') throw new Error('CloudConvert: errore durante la conversione')
+      attempts++
+    }
+
+    if (!exportTask || exportTask.status !== 'finished') throw new Error('Timeout CloudConvert')
+
+    statusText.textContent = 'Download file convertito...'
+    progressBar.style.width = '90%'
+
+    const fileUrl = exportTask.result.files[0].url
+    const fileRes = await fetch(fileUrl)
+    return await fileRes.blob()
+  }
+
+  convertBtn.addEventListener('click', async () => {
+    if (!selectedFile || !formatSelect.value) return
+
+    const outputFmt = formatSelect.value
+    convertBtn.disabled = true
+    downloadLink.classList.remove('show')
+    errorMsg.classList.remove('show')
+    errorMsg.textContent = ''
+    progressBox.classList.add('show')
+    progressBar.style.width = '8%'
+    progressText.textContent = ''
+
+    try {
+      let blob = null
+
+      if (CLOUD_CATEGORIES.includes(fileCategory)) {
+        blob = await convertViaCloudConvert(selectedFile, outputFmt)
+
+      } else {
+        if (!ffmpeg.isLoaded()) {
+          statusText.textContent = 'Caricamento FFmpeg...'
+          await ffmpeg.load()
+        }
+
+        ffmpeg.setProgress(({ ratio }) => {
+          const pct = Math.round(ratio * 100)
+          progressBar.style.width = pct + '%'
+          progressText.textContent = pct + '%'
+          statusText.textContent = 'Conversione in corso...'
         })
 
-        const CONVERSION_MAP = {
-            video: { exts: ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'wmv'], outputs: ['mp4', 'webm', 'avi', 'mov', 'mkv', 'mp3', 'wav', 'gif'] },
-            audio: { exts: ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma'], outputs: ['mp3', 'wav', 'aac', 'ogg', 'flac'] },
-            image: { exts: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'tiff'], outputs: ['jpg', 'png', 'webp', 'gif', 'bmp'] },
-            document: { exts: ['docx', 'doc', 'odt', 'rtf', 'txt'], outputs: ['pdf', 'txt', 'html'] },
-            archive: { exts: ['zip', 'tar', 'gz', 'bz2', '7z', 'rar'], outputs: ['zip', 'tar', 'gz'] },
-        }
+        const ext = selectedFile.name.split('.').pop().toLowerCase()
+        ffmpeg.FS('writeFile', `input.${ext}`, await fetchFile(selectedFile))
+        await ffmpeg.run('-i', `input.${ext}`, `output.${outputFmt}`)
+        const data = ffmpeg.FS('readFile', `output.${outputFmt}`)
+        blob = new Blob([data.buffer])
+      }
 
-        const CATEGORY_LABELS = {
-            video: 'Video', audio: 'Audio', image: 'Immagine',
-            document: 'Documento', archive: 'Archivio',
-        }
+      progressBar.style.width = '100%'
+      progressText.textContent = '100%'
 
-        let selectedFile = null
-        let fileCategory = null
+      downloadLink.href = URL.createObjectURL(blob)
+      downloadLink.download = `converted.${outputFmt}`
+      downloadLink.textContent = `Scarica ${outputFmt.toUpperCase()}`
+      downloadLink.classList.add('show')
+      progressBox.classList.remove('show')
+      convertBtn.disabled = false
 
-        const fileInput = document.getElementById('fileInput')
-        const dropzone = document.getElementById('dropzone')
-        const fileInfo = document.getElementById('fileInfo')
-        const fiIcon = document.getElementById('fiIcon')
-        const fileName = document.getElementById('fileName')
-        const fileSize = document.getElementById('fileSize')
-        const warnMsg = document.getElementById('warnMsg')
-        const formatSelect = document.getElementById('formatSelect')
-        const convertBtn = document.getElementById('convertBtn')
-        const progressBox = document.getElementById('progressBox')
-        const progressBar = document.getElementById('progressBar')
-        const progressText = document.getElementById('progressText')
-        const statusText = document.getElementById('statusText')
-        const downloadLink = document.getElementById('downloadLink')
-        const errorMsg = document.getElementById('errorMsg')
-
-        const ICONS = { video: 'V', audio: 'A', image: 'I', document: 'D', archive: 'Z' }
-
-        function detectCategory(ext) {
-            for (const [cat, data] of Object.entries(CONVERSION_MAP)) {
-                if (data.exts.includes(ext)) return cat
-            }
-            return null
-        }
-
-        function populateFormats(category) {
-            formatSelect.innerHTML = '<option value="">Seleziona formato output</option>'
-            if (!category) return
-            const outputs = CONVERSION_MAP[category].outputs
-            const group = document.createElement('optgroup')
-            group.label = CATEGORY_LABELS[category]
-            outputs.forEach(fmt => {
-                const opt = document.createElement('option')
-                opt.value = fmt
-                opt.textContent = fmt.toUpperCase()
-                group.appendChild(opt)
-            })
-            formatSelect.appendChild(group)
-        }
-
-        function setFile(file) {
-            selectedFile = file
-            const ext = file.name.split('.').pop().toLowerCase()
-            fileCategory = detectCategory(ext)
-
-            fileName.textContent = file.name
-            fileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB'
-            fiIcon.textContent = fileCategory ? ICONS[fileCategory] : '?'
-            fileInfo.classList.add('show')
-            downloadLink.classList.remove('show')
-            errorMsg.classList.remove('show')
-
-            if (!fileCategory) {
-                warnMsg.textContent = 'Formato ".' + ext + '" non supportato.'
-                warnMsg.classList.add('show')
-                formatSelect.innerHTML = '<option value="">Formato non supportato</option>'
-                convertBtn.disabled = true
-                return
-            }
-
-            warnMsg.classList.remove('show')
-            populateFormats(fileCategory)
-            checkReady()
-        }
-
-        function checkReady() {
-            convertBtn.disabled = !(selectedFile && formatSelect.value && fileCategory)
-        }
-
-        fileInput.addEventListener('change', e => { if (e.target.files[0]) setFile(e.target.files[0]) })
-        formatSelect.addEventListener('change', () => {
-            warnMsg.classList.remove('show')
-            checkReady()
-        })
-
-        dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag') })
-        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'))
-        dropzone.addEventListener('drop', e => {
-            e.preventDefault()
-            dropzone.classList.remove('drag')
-            if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0])
-        })
-
-        async function convertDocument(file, outputFmt) {
-            if (outputFmt === 'txt') {
-                const text = await file.text()
-                return new Blob([text], { type: 'text/plain' })
-            }
-            if (outputFmt === 'html') {
-                const text = await file.text()
-                const html = `<!DOCTYPE html><html><body><pre>${text}</pre></body></html>`
-                return new Blob([html], { type: 'text/html' })
-            }
-            throw new Error('Conversione documento non supportata nel browser senza librerie esterne.')
-        }
-
-        async function convertArchive(file, outputFmt) {
-            const JSZip = (await import('https://cdn.skypack.dev/jszip')).default
-            const zip = await JSZip.loadAsync(file)
-            if (outputFmt === 'zip') {
-                const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
-                return blob
-            }
-            throw new Error('Conversione archivio verso ' + outputFmt + ' non supportata nel browser.')
-        }
-
-        convertBtn.addEventListener('click', async () => {
-            if (!selectedFile || !formatSelect.value) return
-
-            const outputFmt = formatSelect.value
-            convertBtn.disabled = true
-            downloadLink.classList.remove('show')
-            errorMsg.classList.remove('show')
-            progressBox.classList.add('show')
-            statusText.textContent = 'Avvio conversione...'
-            progressBar.style.width = '8%'
-            progressText.textContent = ''
-
-            try {
-                let blob = null
-
-                if (fileCategory === 'document') {
-                    statusText.textContent = 'Conversione documento...'
-                    progressBar.style.width = '50%'
-                    blob = await convertDocument(selectedFile, outputFmt)
-                    progressBar.style.width = '100%'
-
-                } else if (fileCategory === 'archive') {
-                    statusText.textContent = 'Conversione archivio...'
-                    progressBar.style.width = '50%'
-                    blob = await convertArchive(selectedFile, outputFmt)
-                    progressBar.style.width = '100%'
-
-                } else {
-                    if (!ffmpeg.isLoaded()) {
-                        statusText.textContent = 'Caricamento FFmpeg...'
-                        await ffmpeg.load()
-                    }
-
-                    ffmpeg.setProgress(({ ratio }) => {
-                        const pct = Math.round(ratio * 100)
-                        progressBar.style.width = pct + '%'
-                        progressText.textContent = pct + '%'
-                        statusText.textContent = 'Conversione in corso...'
-                    })
-
-                    const ext = selectedFile.name.split('.').pop().toLowerCase()
-                    ffmpeg.FS('writeFile', `input.${ext}`, await fetchFile(selectedFile))
-                    await ffmpeg.run('-i', `input.${ext}`, `output.${outputFmt}`)
-                    const data = ffmpeg.FS('readFile', `output.${outputFmt}`)
-                    blob = new Blob([data.buffer])
-                }
-
-                downloadLink.href = URL.createObjectURL(blob)
-                downloadLink.download = `converted.${outputFmt}`
-                downloadLink.textContent = `Scarica ${outputFmt.toUpperCase()}`
-                downloadLink.classList.add('show')
-                progressBox.classList.remove('show')
-                convertBtn.disabled = false
-
-            } catch (e) {
-                console.error('Errore conversione:', e)
-                progressBox.classList.remove('show')
-                errorMsg.classList.add('show')
-                convertBtn.disabled = false
-            }
-        })
-    </script>
+    } catch (e) {
+      console.error('Errore conversione:', e)
+      progressBox.classList.remove('show')
+      errorMsg.textContent = e.message || 'Errore durante la conversione. Controlla la console (F12).'
+      errorMsg.classList.add('show')
+      convertBtn.disabled = false
+    }
+  })
+</script>
 </body>
-
 </html>
